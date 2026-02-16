@@ -1,0 +1,2 @@
+# Minuto  Hora  Dia  Mes  Dia_semana  Comando
+35 17 * * 1-5 /usr/bin/python3 /home/pi/Documents/VisualIBEX/codigo/ibex_check.py 
