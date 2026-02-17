@@ -16,4 +16,8 @@ Pendientes de realizar:
 * Comprobar con 'crontab -l'
 * Esperar que se ejecute cron con el código de 'ibex_check.py'
 * 'pip install yfinance'
+
 * Aquí ya podría modificar 'ibex_check.py' o hacer diferentes archivos '.py' para tener todo un poco modulado
+
+NOTA: En crontab los valores son
+\# Min Hora Día Mes Dia_sem Comando
