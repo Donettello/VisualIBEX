@@ -14,6 +14,7 @@ def test():
         print(f"Precio actual: {precio_limpio} EUR")
     except Exception as e:
         print(f"Error al conectar: {e}")
+        
 
 if __name__ == "__main__":
     test()
