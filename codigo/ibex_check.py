@@ -1,4 +1,5 @@
 import datetime
+import os
 import yfinance as yf
 
 def guardar_registro():
@@ -31,10 +32,21 @@ def capturar_cierre():
         # Obtener la fecha del sistema
         fecha_sistema = datetime.datetime.now().strftime('%Y-%m-%d')
 
-        if fecha_sesion == fecha_sistema:
-            print("Hoy toca trabajar")
+        ruta_txt = "/home/donettello/Documents/VisualIBEX/ultima_sesion.txt"
+
+        if os.path.exists(ruta_txt):
+            with open(ruta_txt, 'r') as f:
+                fecha_ultima = f.read().strip() # .strip() quita espacios o saltos de línea invisibles
         else:
-            print("Hoy es festivo")
+            fecha_ultima = "" # Si el archivo no existe, lo tratamos como vacío
+
+        if fecha_sesion == fecha_sistema and fecha_sesion != fecha_ultima:
+            print("Hoy toca trabajar")
+            # Hacer cosas próximamente
+            with open("/home/donettello/Documents/VisualIBEX/ultima_sesion.txt", 'w') as f:
+                f.write(fecha_sistema)
+        else:
+            print("Hoy no toca")
     
 
 if __name__ == "__main__":
