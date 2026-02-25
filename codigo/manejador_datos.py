@@ -1,7 +1,5 @@
 import os
 import pandas as pd
-import datetime
-
 def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
     """
         Guarda una fila en el CSV y mantiene los últimos X registros
