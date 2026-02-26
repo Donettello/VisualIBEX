@@ -1,0 +1,45 @@
+# Rutas generales para no tener que escribirlas en cada script
+RUTA_CSV_MAESTRO = "/home/donettello/Documents/VisualIBEX/data/datos_ibex_completo.csv"
+RUTA_ULTIMA_SESION = "/home/donettello/Documents/VisualIBEX/ultima_sesion.txt"
+
+# Diccionario de Tickers y Nombres Reales
+EMPRESAS_IBEX = {
+    "ACS.MC": "ACS, Actividades de Construcción y Servicios, S.A.",
+    "ACX.MC": "Acerinox, S.A.",
+    "AENA.MC": "Aena",
+    "AMS.MC": "Amadeus IT Group",
+    "ANA.MC": "Acciona",
+    "ANE.MC": "Corporación Acciona Energías Renovables, S.A.",
+    "BBVA.MC": "BBVA",
+    "BKT.MC": "Bankinter",
+    "CABK.MC": "CaixaBank",
+    "CLNX.MC": "Cellnex Telecom",
+    "COL.MC": "Colonial SFL, Socimi S. A",
+    "ELE.MC": "Endesa",
+    "ENG.MC": "Enagás",
+    "FDR.MC": "Fluidra",
+    "FER.MC": "Ferrovial",
+    "GRF.MC": "Grifols",
+    "IAG.MC": "International Consolidated Airlines Group S.A.",
+    "IBE.MC": "Iberdrola",
+    "ITX.MC": "Inditex",
+    "IDR.MC": "Indra Sistemas, S.A.",
+    "LOG.MC": "Logista Integral, S.A.",
+    "MAP.MC": "Mapfre",
+    "MEL.MC": "Meliá Hotels International",
+    "MRL.MC": "MERLIN Properties SOCIMI, S.A.",
+    "MTS.MC": "ArcelorMittal S.A.",
+    "NTGY.MC": "Naturgy Energy Group, S.A.",
+    "PUIG.MC": "Puig Brands S.A.",
+    "REP.MC": "Repsol, S.A.",
+    "ROVI.MC": "Laboratorios Farmaceuticos Rovi, S.A.",
+    "SAB.MC": "Banco de Sabadell, S.A.",
+    "SAN.MC": "Banco Santander, S.A.",
+    "SCYR.MC": "Sacyr, S.A.",
+    "SLR.MC": "Solaria Energía y Medio Ambiente, S.A.",
+    "TEF.MC": "Telefónica, S.A.",
+    "UNI.MC": "Unicaja Banco, S.A."
+}
+
+# Lista simple de tickers para iterar fácilmente
+TICKERS_LISTA = list(EMPRESAS_IBEX.keys())
