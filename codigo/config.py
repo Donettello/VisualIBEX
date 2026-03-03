@@ -1,6 +1,8 @@
 # Rutas generales para no tener que escribirlas en cada script
 RUTA_CSV_MAESTRO = "/home/donettello/Documents/VisualIBEX/data/datos_ibex_completo.csv"
 RUTA_ULTIMA_SESION = "/home/donettello/Documents/VisualIBEX/ultima_sesion.txt"
+RUTA_LOG = "/home/donettello/Documents/VisualIBEX/info.log"
+RUTA_PRUEBA = "/home/donettello/Documents/VisualIBEX/data/datos_ibex_prueba.csv"
 
 # Diccionario de Tickers y Nombres Reales
 EMPRESAS_IBEX = {
@@ -43,3 +45,12 @@ EMPRESAS_IBEX = {
 
 # Lista simple de tickers para iterar fácilmente
 TICKERS_LISTA = list(EMPRESAS_IBEX.keys())
+
+DB_CONFIG = {
+    'host': 'localhost',
+    'user': 'donettello',
+    'password': 'Puesvaaseresta0',
+    'database': 'visualibex_db'
+}
+
+TABLA_HISTORICO = 'historico_ibex'

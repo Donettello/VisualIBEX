@@ -1,4 +1,5 @@
 import os
+import logging
 import pandas as pd
 
 def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
@@ -8,8 +9,8 @@ def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
                                       'Ticker':...,
                                       'Precio inicio sesion':..., 
                                       'Precio final sesion':..., 
-                                      'Rentabilidad sesion':...,
-                                      'Rentabilidad diaria':...}
+                                      'Rentabilidad sesion(%)':...,
+                                      'Rentabilidad diaria(%)':...}
     """
     # Comprobamos que la dirección del fichero es la correcta
     if os.path.exists(ruta_csv):
@@ -33,6 +34,6 @@ def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
 
     # Guardamos los datos en el CSV
     df.to_csv(ruta_csv, index=False, sep=';')
-    print(f"Registro guardado. Total en archivo: {len(df)} lineas.")
+    logging.info(f"Registro guardado. Total en archivo: {len(df)} lineas.")
     return
 
