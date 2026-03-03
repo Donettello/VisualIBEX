@@ -5,7 +5,17 @@ import os
 import yfinance as yf
 
 from manejador_datos import manejador_csv
-from config import RUTA_PRUEBA, RUTA_ULTIMA_SESION, TICKERS_LISTA, EMPRESAS_IBEX
+from config import RUTA_PRUEBA, RUTA_ULTIMA_SESION, TICKERS_LISTA, EMPRESAS_IBEX, RUTA_LOG
+
+# Configuración del log
+ruta_log = RUTA_LOG
+
+logging.basicConfig(
+    filename=ruta_log,
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 def guardar_registro():
     ahora = datetime.datetime.now()
@@ -85,9 +95,7 @@ def capturar_cierre():
             # Actualizar fichero de control
             with open(RUTA_ULTIMA_SESION, 'w') as f:
                 f.write(fecha_sistema)
-            
-            guardar_registro()
-            
+                        
             print(f"Ficheros actuaalizados")
         else:
             print("Hoy no toca")
