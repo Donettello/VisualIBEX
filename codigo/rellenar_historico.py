@@ -36,8 +36,8 @@ def poblar_historico(ticker = 'ITX.MC'):
         # Preparamos el dato
         nuevo_dato = {
             'Fecha': fecha_actual.strftime('%Y-%m-%d'),
-            'Precio inicio sesion': round(precio_apertura, 4),
-            'Precio final sesion': round(precio_cierre_hoy, 4),
+            'Precio apertura': round(precio_apertura, 4),
+            'Precio cierre': round(precio_cierre_hoy, 4),
             'Rentabilidad sesion (%)': round(rentabilidad_sesion, 4),
             'Rentabilidad diaria (%)': round(rentabilidad_dia,4)
         }
@@ -86,8 +86,8 @@ def poblar_historico_ibex():
             nuevo_dato = {
                 'Fecha': fecha_actual.strftime('%Y-%m-%d'),
                 'Ticker': t,
-                'Precio inicio sesion': round(precio_apertura, 4),
-                'Precio final sesion': round(precio_cierre_hoy, 4),
+                'Precio apertura': round(precio_apertura, 4),
+                'Precio cierre': round(precio_cierre_hoy, 4),
                 'Rentabilidad sesion (%)': round(rentabilidad_sesion, 4),
                 'Rentabilidad diaria (%)': round(rentabilidad_dia,4)
             }

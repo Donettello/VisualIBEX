@@ -1,9 +1,9 @@
-import datetime
 import logging
 import time
 import os
 import yfinance as yf
 
+from datetime import datetime
 from manejador_datos import manejador_csv
 from config import RUTA_PRUEBA, RUTA_ULTIMA_SESION, TICKERS_LISTA, EMPRESAS_IBEX, RUTA_LOG
 
@@ -12,13 +12,14 @@ ruta_log = RUTA_LOG
 
 logging.basicConfig(
     filename=ruta_log,
+    filemode='w', # Para controlar mejor  lo que ocurre cada día
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 
 def guardar_registro():
-    ahora = datetime.datetime.now()
+    ahora = datetime.now()
     mensaje = f"Se ha ejecutado el código el: {ahora.strftime('%d-%m-%Y %H:%M:%S')}"
 
     with open("/home/donettello/Documents/VisualIBEX/ibex_log.txt", 'a') as f:
@@ -46,7 +47,7 @@ def capturar_cierre():
         fecha_sesion = hist.index[-1].strftime('%Y-%m-%d')
 
         # Obtener la fecha del sistema
-        fecha_sistema = datetime.datetime.now().strftime('%Y-%m-%d')
+        fecha_sistema = datetime.now().strftime('%Y-%m-%d')
 
         ruta_txt = "/home/donettello/Documents/VisualIBEX/ultima_sesion.txt"
 
@@ -77,13 +78,14 @@ def capturar_cierre():
                     rentabilidad_sesion = ((precio_cierre_hoy-precio_apertura)/precio_apertura) * 100
                 except Exception as e:
                     logging.error(f"Error con ticker {t}:{e}")
+                    continue
 
                 # Preparamos el dato
                 nuevo_dato = {
                     'Fecha': fecha_sesion,
                     'Ticker': t,
-                    'Precio inicio sesion': round(precio_apertura, 4),
-                    'Precio final sesion': round(precio_cierre_hoy, 4),
+                    'Precio inicio': round(precio_apertura, 4),
+                    'Precio final': round(precio_cierre_hoy, 4),
                     'Rentabilidad sesion (%)': round(rentabilidad_sesion, 4),
                     'Rentabilidad diaria (%)': round(rentabilidad_dia,4)
                 }
@@ -100,6 +102,12 @@ def capturar_cierre():
         else:
             print("Hoy no toca")
     
+def obtener_ultimo_cierre_db(cursor, ticker):
+    '''Obtiene el último precio_cierre registrado en la BD del ticker'''
+    query = "SELECT precio_cierre FROM historico_ibex WHERE ticker='%s' ORDER BY fecha DESC LIMIT 1;"
+    cursor.execute(query, (ticker, ))
+    resultado = cursor.fetchone()
+    return float(resultado[0]) if resultado else None
 
 if __name__ == "__main__":
     capturar_cierre()

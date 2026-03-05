@@ -1,7 +1,7 @@
 import mysql.connector
 import pandas as pd
 
-from config import DB_CONFIG, EMPRESAS_IBEX, RUTA_CSV_MAESTRO
+from config import DB_CONFIG, EMPRESAS_IBEX, RUTA_PRUEBA
 
 def cargar_empresas_info():
     try:
@@ -37,8 +37,8 @@ def cargar_empresas_info():
 def primera_carga_db():
     try:
         # Leemos CSV con Pandas
-        print(f"Leyendo {RUTA_CSV_MAESTRO}")
-        df = pd.read_csv(RUTA_CSV_MAESTRO, sep=';')
+        print(f"Leyendo {RUTA_PRUEBA}")
+        df = pd.read_csv(RUTA_PRUEBA, sep=';')
 
         # Conectamos a MariaDB
         conn = mysql.connector.connect(**DB_CONFIG)
@@ -47,7 +47,7 @@ def primera_carga_db():
 
         # Preparamos la query para la inserción
         sql = "INSERT IGNORE INTO historico_ibex \
-            (fecha, ticker, precio_inicio, precio_final, rent_sesion, rent_diaria)\
+            (fecha, ticker, precio_apertura, precio_cierre, rent_sesion, rent_diaria)\
             VALUES (%s, %s, %s, %s, %s, %s)"
         
         # Convertir DataFrame a lista de tuplas para la inserción masiva
@@ -58,8 +58,8 @@ def primera_carga_db():
                 datos_para_db.append((
                     fila['Fecha'],
                     fila['Ticker'],
-                    round(float(fila['Precio inicio sesion']), 4),
-                    round(float(fila['Precio final sesion']), 4),
+                    round(float(fila['Precio apertura']), 4),
+                    round(float(fila['Precio final']), 4),
                     round(float(fila['Rentabilidad sesion (%)']), 4),
                     round(float(fila['Rentabilidad diaria (%)']), 4)
                 ))

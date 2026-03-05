@@ -7,8 +7,8 @@ def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
         Guarda una fila en el CSV y mantiene los últimos X registros
         nueva_fila: dict con formato {'Fecha':...,
                                       'Ticker':...,
-                                      'Precio inicio sesion':..., 
-                                      'Precio final sesion':..., 
+                                      'Precio apertura':..., 
+                                      'Precio cierre':..., 
                                       'Rentabilidad sesion(%)':...,
                                       'Rentabilidad diaria(%)':...}
     """
@@ -19,8 +19,8 @@ def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
         # En caso de que  no exista
         df = pd.DataFrame(columns=['Fecha',
                                    'Ticker',
-                                   'Precio inicio sesion', 
-                                   'Precio final sesion', 
+                                   'Precio apertura', 
+                                   'Precio cierre', 
                                    'Rentabilidad sesion (%)', 
                                    'Rentabilidad diaria (%)'])
 
