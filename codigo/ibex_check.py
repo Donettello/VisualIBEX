@@ -1,11 +1,12 @@
 import logging
+import mysql.connector
 import time
 import os
 import yfinance as yf
 
 from datetime import datetime
 from manejador_datos import manejador_csv
-from config import RUTA_PRUEBA, RUTA_ULTIMA_SESION, TICKERS_LISTA, EMPRESAS_IBEX, RUTA_LOG
+from config import RUTA_PRUEBA, RUTA_ULTIMA_SESION, TICKERS_LISTA, EMPRESAS_IBEX, RUTA_LOG, DB_CONFIG
 
 # Configuración del log
 ruta_log = RUTA_LOG
@@ -43,8 +44,8 @@ def capturar_cierre():
     hist = accion.history(period="1d")
 
     if not hist.empty:
-        # Obtener la fecha REAL de la  sesión de bolsa
-        fecha_sesion = hist.index[-1].strftime('%Y-%m-%d')
+        # Obtener la fecha REAL de la última sesión de bolsa
+        fecha_ultima_sesion = hist.index[-1].strftime('%Y-%m-%d')
 
         # Obtener la fecha del sistema
         fecha_sistema = datetime.now().strftime('%Y-%m-%d')
@@ -53,61 +54,87 @@ def capturar_cierre():
 
         if os.path.exists(ruta_txt):
             with open(ruta_txt, 'r') as f:
-                fecha_ultima = f.read().strip() # .strip() quita espacios o saltos de línea invisibles
+                fecha_ultima_registrada = f.read().strip() # .strip() quita espacios o saltos de línea invisibles
         else:
-            fecha_ultima = "" # Si el archivo no existe, lo tratamos como vacío
+            fecha_ultima_registrada = "" # Si el archivo no existe, lo tratamos como vacío
 
-        if fecha_sesion == fecha_sistema and fecha_sesion != fecha_ultima:
+        if fecha_ultima_sesion == fecha_sistema and fecha_ultima_sesion != fecha_ultima_registrada:
             # Hoy toca trabajar
-            for t in TICKERS_LISTA:
-                print(f"Obteniendo datos de la bolsa para la empresa {EMPRESAS_IBEX[t]}")
-                logging.info(f"Obteniendo datos de la bolsa para la empresa {EMPRESAS_IBEX[t]}")
-                time.sleep(1.5)
-
-                # Capturamos el precio de Inditex
-                accion = yf.Ticker(t)
-                hist = accion.history(period="5d")
-
-                try:
-                    # Extraemos los precios
-                    precio_apertura = hist['Open'].iloc[-1]
-                    precio_cierre_hoy = hist['Close'].iloc[-1]
-                    precio_cierre_ayer = hist['Close'].iloc[-2]
-
-                    rentabilidad_dia = ((precio_cierre_hoy-precio_cierre_ayer)/precio_cierre_ayer) * 100
-                    rentabilidad_sesion = ((precio_cierre_hoy-precio_apertura)/precio_apertura) * 100
-                except Exception as e:
-                    logging.error(f"Error con ticker {t}:{e}")
-                    continue
-
-                # Preparamos el dato
-                nuevo_dato = {
-                    'Fecha': fecha_sesion,
-                    'Ticker': t,
-                    'Precio inicio': round(precio_apertura, 4),
-                    'Precio final': round(precio_cierre_hoy, 4),
-                    'Rentabilidad sesion (%)': round(rentabilidad_sesion, 4),
-                    'Rentabilidad diaria (%)': round(rentabilidad_dia,4)
-                }
-
-                # Ruta de guardado de los datos
-                manejador_csv(nuevo_dato, RUTA_PRUEBA, max_registros=20)
-                logging.info(f"Ticker {t} introducido correctamente.")
+            captura_diaria()
             
             # Actualizar fichero de control
             with open(RUTA_ULTIMA_SESION, 'w') as f:
                 f.write(fecha_sistema)
                         
-            print(f"Ficheros actuaalizados")
+            print(f"Ficheros actualizados")
         else:
             print("Hoy no toca")
+            logging.info("Hoy no ha habido sesión")
     
 def obtener_ultimo_cierre_db(cursor, ticker):
     '''Obtiene el último precio_cierre registrado en la BD del ticker'''
-    query = "SELECT precio_cierre FROM historico_ibex WHERE ticker='%s' ORDER BY fecha DESC LIMIT 1;"
+    query = "SELECT precio_cierre FROM historico_ibex WHERE ticker=%s ORDER BY fecha DESC LIMIT 1;"
     cursor.execute(query, (ticker, ))
     resultado = cursor.fetchone()
     return float(resultado[0]) if resultado else None
+
+def captura_diaria():
+    conn = mysql.connector.connect(**DB_CONFIG)
+    cursor = conn.cursor()
+
+    for t in TICKERS_LISTA:
+        try:
+            accion = yf.Ticker(t)
+
+            # Intento de capturar el historiaal del día
+            hist = accion.history(period='1d')
+
+            if not hist.empty and not str(hist['Close'].iloc[-1]) == 'nan':
+                p_apertura = hist['Open'].iloc[-1]
+                p_cierre_hoy = hist['Close'].iloc[-1]
+                confirmado = 1
+            else:
+                # No se ha cerrado la sesión aún
+                logging.warning(f"Obteniendo datos en vivo de ticker {t}")
+                info = accion.fast_info
+                p_apertura = info['open']
+                p_cierre_hoy = info['last_price']
+                confirmado = 0
+
+            # Obtenemos nuestro precio de ayer de la base de datos
+            p_cierre_ayer = obtener_ultimo_cierre_db(cursor, t)
+
+            if p_cierre_ayer is None:
+                # Ha fallado la base de datos
+                hist_old = accion.history(period='5d')
+                p_cierre_ayer = hist_old['Close'].iloc[-2]
+
+            # Calculamos las rentabilidades
+            rent_sesion = ((p_cierre_hoy - p_apertura) / p_apertura) * 100
+            rent_diaria = ((p_cierre_hoy - p_cierre_ayer) / p_cierre_ayer) * 100
+
+            # Preparamos el dato
+            nuevo_dato = {
+                'Fecha': datetime.now().strftime('%Y-%m-%d'),
+                'Ticker': t,
+                'Precio apertura': round(p_apertura, 4),
+                'Precio cierre': round(p_cierre_hoy, 4),
+                'Rentabilidad sesion (%)': round(rent_sesion, 4),
+                'Rentabilidad diaria (%)': round(rent_diaria,4),
+                'Confirmado': confirmado
+            }
+
+            # Ruta de guardado de los datos
+            manejador_csv(nuevo_dato, RUTA_PRUEBA, max_registros=20)
+            logging.info(f"Ticker {t} introducido correctamente.")
+
+        except Exception as e:
+            logging.error(f"Error con Ticker {t}: {e}")
+            continue
+
+    cursor.close()
+    conn.close()
+    return
 
 if __name__ == "__main__":
     capturar_cierre()

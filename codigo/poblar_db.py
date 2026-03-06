@@ -47,8 +47,8 @@ def primera_carga_db():
 
         # Preparamos la query para la inserción
         sql = "INSERT IGNORE INTO historico_ibex \
-            (fecha, ticker, precio_apertura, precio_cierre, rent_sesion, rent_diaria)\
-            VALUES (%s, %s, %s, %s, %s, %s)"
+            (fecha, ticker, precio_apertura, precio_cierre, rent_sesion, rent_diaria, confirmado)\
+            VALUES (%s, %s, %s, %s, %s, %s, %s)"
         
         # Convertir DataFrame a lista de tuplas para la inserción masiva
         # Mapeamos las columnas del CSV a las de la DB
@@ -59,9 +59,10 @@ def primera_carga_db():
                     fila['Fecha'],
                     fila['Ticker'],
                     round(float(fila['Precio apertura']), 4),
-                    round(float(fila['Precio final']), 4),
+                    round(float(fila['Precio cierre']), 4),
                     round(float(fila['Rentabilidad sesion (%)']), 4),
-                    round(float(fila['Rentabilidad diaria (%)']), 4)
+                    round(float(fila['Rentabilidad diaria (%)']), 4), 
+                    fila['Confirmado']
                 ))
             except KeyError as e:
                 print(f"Error: No encuentro la columna {e}. Revisa si en el CSV se llama distinto.")
