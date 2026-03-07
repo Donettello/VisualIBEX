@@ -39,7 +39,8 @@ def poblar_historico(ticker = 'ITX.MC'):
             'Precio apertura': round(precio_apertura, 4),
             'Precio cierre': round(precio_cierre_hoy, 4),
             'Rentabilidad sesion (%)': round(rentabilidad_sesion, 4),
-            'Rentabilidad diaria (%)': round(rentabilidad_dia,4)
+            'Rentabilidad diaria (%)': round(rentabilidad_dia,4),
+            'Confirmado': 1
         }
 
         # Ruta de guardado de los datos
@@ -89,7 +90,8 @@ def poblar_historico_ibex():
                 'Precio apertura': round(precio_apertura, 4),
                 'Precio cierre': round(precio_cierre_hoy, 4),
                 'Rentabilidad sesion (%)': round(rentabilidad_sesion, 4),
-                'Rentabilidad diaria (%)': round(rentabilidad_dia,4)
+                'Rentabilidad diaria (%)': round(rentabilidad_dia,4),
+                'Confirmado': 1
             }
 
             manejador_csv(nuevo_dato, RUTA_CSV_MAESTRO, max_registros=20)

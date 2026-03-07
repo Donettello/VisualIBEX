@@ -5,14 +5,11 @@ import os
 import yfinance as yf
 
 from datetime import datetime
-from manejador_datos import manejador_csv
-from config import RUTA_PRUEBA, RUTA_ULTIMA_SESION, TICKERS_LISTA, EMPRESAS_IBEX, RUTA_LOG, DB_CONFIG
-
-# Configuración del log
-ruta_log = RUTA_LOG
+from manejador_datos import manejador_csv, revisar_pendientes
+from config import RUTA_PRUEBA, RUTA_ULTIMA_SESION, TICKERS_LISTA, RUTA_LOG, DB_CONFIG
 
 logging.basicConfig(
-    filename=ruta_log,
+    filename=RUTA_LOG,
     filemode='w', # Para controlar mejor  lo que ocurre cada día
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -81,6 +78,9 @@ def obtener_ultimo_cierre_db(cursor, ticker):
 def captura_diaria():
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
+
+    # Revisamos que no hay precios de cierre pendientes
+    revisar_pendientes(cursor, conn)
 
     for t in TICKERS_LISTA:
         try:
