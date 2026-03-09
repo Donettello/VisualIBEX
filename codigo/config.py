@@ -2,7 +2,7 @@
 RUTA_CSV_MAESTRO = "/home/donettello/Documents/VisualIBEX/data/datos_ibex_completo.csv"
 RUTA_ULTIMA_SESION = "/home/donettello/Documents/VisualIBEX/ultima_sesion.txt"
 RUTA_LOG = "/home/donettello/Documents/VisualIBEX/info.log"
-RUTA_LOG_TICKERS = "/home/donettello/Documents/VisualIBEX/status_tickers.log"
+RUTA_STATUS = "/home/donettello/Documents/VisualIBEX/status_tickers.log"
 RUTA_PRUEBA = "/home/donettello/Documents/VisualIBEX/data/datos_ibex_prueba.csv"
 
 # Diccionario de Tickers y Nombres Reales
@@ -13,7 +13,7 @@ EMPRESAS_IBEX = {
     "AMS.MC": "Amadeus IT Group",
     "ANA.MC": "Acciona",
     "ANE.MC": "Corporación Acciona Energías Renovables, S.A.",
-    "BBVA.MC": "BBVA",
+    "BBVA.MC": "Banco Bilbao Vizcaya Argentaria",
     "BKT.MC": "Bankinter",
     "CABK.MC": "CaixaBank",
     "CLNX.MC": "Cellnex Telecom",
@@ -25,7 +25,7 @@ EMPRESAS_IBEX = {
     "GRF.MC": "Grifols",
     "IAG.MC": "International Consolidated Airlines Group S.A.",
     "IBE.MC": "Iberdrola",
-    "ITX.MC": "Inditex",
+    "ITX.MC": "Industria de Diseño Textil",
     "IDR.MC": "Indra Sistemas, S.A.",
     "LOG.MC": "Logista Integral, S.A.",
     "MAP.MC": "Mapfre",
@@ -33,7 +33,7 @@ EMPRESAS_IBEX = {
     "MRL.MC": "MERLIN Properties SOCIMI, S.A.",
     "MTS.MC": "ArcelorMittal S.A.",
     "NTGY.MC": "Naturgy Energy Group, S.A.",
-    "PUIG.MC": "Puig Brands S.A.",
+    "PUIG.MC": "Puig Brands SA",
     "REP.MC": "Repsol, S.A.",
     "ROVI.MC": "Laboratorios Farmaceuticos Rovi, S.A.",
     "SAB.MC": "Banco de Sabadell, S.A.",
