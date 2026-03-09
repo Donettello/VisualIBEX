@@ -6,7 +6,7 @@ import yfinance as yf
 
 from datetime import datetime
 from manejador_datos import manejador_csv, revisar_pendientes
-from config import RUTA_PRUEBA, RUTA_ULTIMA_SESION, TICKERS_LISTA, RUTA_LOG, DB_CONFIG
+from config import RUTA_CSV_MAESTRO, RUTA_ULTIMA_SESION, TICKERS_LISTA, RUTA_LOG, DB_CONFIG
 
 logging.basicConfig(
     filename=RUTA_LOG,
@@ -79,6 +79,8 @@ def captura_diaria():
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
 
+    fecha_hoy = datetime.now().strftime('%Y-%m-%d')
+
     # Revisamos que no hay precios de cierre pendientes
     revisar_pendientes(cursor, conn)
 
@@ -113,9 +115,33 @@ def captura_diaria():
             rent_sesion = ((p_cierre_hoy - p_apertura) / p_apertura) * 100
             rent_diaria = ((p_cierre_hoy - p_cierre_ayer) / p_cierre_ayer) * 100
 
+            # --- NUEVA SECCIÓN: GUARDADO EN MARIA DB ---
+            sql_db = """
+                INSERT INTO historico_ibex 
+                (fecha, ticker, precio_apertura, precio_cierre, rent_sesion, rent_diaria, confirmado)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    precio_cierre = VALUES(precio_cierre),
+                    rent_sesion = VALUES(rent_sesion),
+                    rent_diaria = VALUES(rent_diaria),
+                    confirmado = VALUES(confirmado)
+            """
+            valores_db = (
+                fecha_hoy,
+                t,
+                round(float(p_apertura), 4),
+                round(float(p_cierre_hoy), 4),
+                round(float(rent_diaria), 2),
+                round(float(rent_sesion), 2),
+                confirmado
+            )
+            
+            cursor.execute(sql_db, valores_db)
+            conn.commit() # Guardamos en cada iteración para mayor seguridad
+
             # Preparamos el dato
             nuevo_dato = {
-                'Fecha': datetime.now().strftime('%Y-%m-%d'),
+                'Fecha': fecha_hoy,
                 'Ticker': t,
                 'Precio apertura': round(p_apertura, 4),
                 'Precio cierre': round(p_cierre_hoy, 4),
@@ -125,11 +151,14 @@ def captura_diaria():
             }
 
             # Ruta de guardado de los datos
-            manejador_csv(nuevo_dato, RUTA_PRUEBA, max_registros=20)
+            manejador_csv(nuevo_dato, RUTA_CSV_MAESTRO, max_registros=20)
+
+
             logging.info(f"Ticker {t} introducido correctamente.")
 
         except Exception as e:
             logging.error(f"Error con Ticker {t}: {e}")
+            conn.rollback() # Deshacer cambios en DB si hay error
             continue
 
     cursor.close()

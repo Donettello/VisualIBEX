@@ -45,19 +45,20 @@ def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
 
 def revisar_pendientes(cursor, conn):
     # Construimos la query para obtener los que quedan pendientes de confirmación
-    query = "SELECT fecha, ticker FROM historico_ibex WHERE confirmado=0;"
+    query = "SELECT fecha, ticker, precio_apertura FROM historico_ibex WHERE confirmado=0;"
     cursor.execute(query)
     pendientes = cursor.fetchall()
 
     if not pendientes:
         # No hay valores pendientes
+        logging.info("Todo está confirmado")
         return
     
     logging.info(f"Confirmando {len(pendientes)} cierres pendientes...")
     print(f"Confirmando {len(pendientes)} cierres pendientes")
 
     # Para cada par fecha, ticker
-    for fecha, ticker in pendientes:
+    for fecha, ticker, p_apertura in pendientes:
         try:
             # Calculamos el día siguiente para el rango de Yahoo
             fecha_dt = datetime.strptime(str(fecha), '%Y-%m-%d')
@@ -68,13 +69,47 @@ def revisar_pendientes(cursor, conn):
             df_confirmar = accion.history(start=fecha.strftime('%Y-%m-%d'), end=fecha_fin)
 
             if not df_confirmar.empty:
-                # Obtenemos el precio oficial
-                precio_oficial = float(df_confirmar['Close'].iloc[0])
-                # Actualizamos la base de datos
-                update_query = "UPDATE historico_ibex SET precio_cierre=%s, confirmado=1 WHERE fecha=%s AND ticker=%s;"
-                cursor.execute(update_query, (precio_oficial, fecha, ticker))
-                logging.info(f"{ticker} [{fecha}] actualizado a precio oficial")
-                print(f"{ticker} [{fecha}] actualizado a precio oficial")
+                # 1. El nuevo precio oficial
+                p_cierre_oficial = float(df_confirmar['Close'].iloc[0])
+
+                # Obtenemos el cierre de la sesión anterior de MariaDB
+                # Buscamos la fecha máxima que sea menor a la fecha que estamos manejando
+                sql_ayer = '''
+                    SELECT precio_cierre FROM historico_ibex
+                    WHERE ticker = %s AND fecha < %s
+                    ORDER BY fecha DESC LIMIT 1;
+                '''
+                cursor.execute(sql_ayer, (ticker, fecha))
+                res_ayer = cursor.fetchone()
+
+                if res_ayer:
+                    p_cierre_anterior = float(res_ayer[0])
+
+                    # Recalcular rentabilidades
+                    nueva_rent_sesion = ((p_cierre_oficial - p_apertura) / p_apertura) * 100
+                    nueva_rent_diaria = ((p_cierre_oficial - p_cierre_anterior) / p_cierre_anterior) * 100
+
+                    # Actualización valores definitivos
+                    update_query = '''
+                        UPDATE historico_ibex
+                        SET precio_cierre = %s,
+                            rent_sesion = %s,
+                            rent_diaria = %s,
+                            confirmado = 1
+                        WHERE fecha=%s AND ticker=%s;
+                    '''
+                    cursor.execute(update_query,
+                                  (round(p_cierre_oficial,4),
+                                   round(nueva_rent_sesion, 4),
+                                   round(nueva_rent_diaria, 4),
+                                   fecha, ticker))
+                    
+                    logging.info(f"{ticker} [{fecha}] actualizado a precio oficial")
+                    print(f"{ticker} [{fecha}] actualizado a precio oficial")
+                else:
+                    logging.warning(f"No hay sesión previa para {ticker} el {fecha}")
+
+                
 
         except Exception as e:
             logging.error(f"No se pudo confirmar ticker {ticker}: {e}")

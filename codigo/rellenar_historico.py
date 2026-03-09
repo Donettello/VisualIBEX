@@ -91,7 +91,7 @@ def poblar_historico_ibex():
                 'Precio cierre': round(precio_cierre_hoy, 4),
                 'Rentabilidad sesion (%)': round(rentabilidad_sesion, 4),
                 'Rentabilidad diaria (%)': round(rentabilidad_dia,4),
-                'Confirmado': 1
+                'Confirmado': int(1)
             }
 
             manejador_csv(nuevo_dato, RUTA_CSV_MAESTRO, max_registros=20)
