@@ -1,5 +1,5 @@
 import yfinance as yf
-import pandas as pd
+
 from manejador_datos import manejador_csv
 from config import RUTA_CSV_MAESTRO, TICKERS_LISTA
 

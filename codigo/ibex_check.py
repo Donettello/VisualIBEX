@@ -131,8 +131,8 @@ def captura_diaria():
                 t,
                 round(float(p_apertura), 4),
                 round(float(p_cierre_hoy), 4),
-                round(float(rent_diaria), 2),
-                round(float(rent_sesion), 2),
+                round(float(rent_sesion), 4),
+                round(float(rent_diaria), 4),
                 confirmado
             )
             
