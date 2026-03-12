@@ -1,11 +1,19 @@
 import config_privado
 import os
-import requests
 import time
 import yfinance as yf
 
+from database_manager import DatabaseManager
 from datetime import datetime
 from config import EMPRESAS_IBEX
+from notifier import Notifier
+
+db_manager = DatabaseManager()
+notificador = Notifier()
+
+# Cargamos rutas y datos desde la DB y el ENV
+RUTA_LOG = os.getenv('RUTA_LOG_INTEGRIDAD')
+EMPRESAS = db_manager.obtener_diccionario_empresas()
 
 def inicializar_log():
     """Borra el contenido del log anterior antes de empezar la sesión"""
@@ -28,21 +36,6 @@ def escribir_log(mensaje, nivel="INFO"):
             os.fsync(f.fileno())
     except Exception as e:
         print(f"Error escribiendo en el log: {e}")
-
-def enviar_alerta_telegram(mensaje):
-    url = f"https://api.telegram.org/bot{config_privado.TOKEN_ID}/sendMessage"
-
-    payload = {
-        'chat_id': config_privado.CHAT_ID,
-        'text': f"ALERTA IBEX:\n{mensaje}",
-        'parse_mode': 'Markdown'
-    }
-
-    try:
-        requests.post(url, data=payload, timeout=10)
-    except Exception as e:
-        print(f"Error mandando mensaje: {e}")
-    return
 
 def verificar_integridad_mercado():
     inicializar_log()
@@ -95,7 +88,7 @@ def verificar_integridad_mercado():
     if errores_detectados > 0 or discrepancias_nombre > 0:
         resumen = f"Se han detectado {errores_detectados} errores y {discrepancias_nombre} discrepancias en el IBEX."
         # Si quieres detalles específicos
-        enviar_alerta_telegram(resumen + "\nRevisa el log en la Raspberry para más detalles.")
+        notificador.enviar_alerta(resumen + "\nRevisa el log en la Raspberry para más detalles.")
         escribir_log("Alerta enviada a Telegram.")
     else:
         escribir_log("Todo correcto. Sin alertas.")

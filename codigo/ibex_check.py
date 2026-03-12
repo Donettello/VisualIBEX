@@ -4,11 +4,15 @@ import time
 import os
 import yfinance as yf
 
+from database_manager import DatabaseManager
 from datetime import datetime
 from manejador_datos import manejador_csv, revisar_pendientes
-from check_tickers_integrity import enviar_alerta_telegram
 from config import TICKERS_LISTA
 from config_privado import *
+from notifier import Notifier
+
+db_manager = DatabaseManager
+notificador = Notifier()
 
 logging.basicConfig(
     filename=RUTA_LOG,
@@ -39,7 +43,7 @@ def capturar_cierre():
         print(f"Conexión exitosa")
     except Exception as e:
         msg = f"Error al conectar: {e}"
-        enviar_alerta_telegram(msg)
+        notificador.enviar_alerta(msg)
         print(msg)
     
     hist = accion.history(period="1d")
@@ -89,6 +93,7 @@ def captura_diaria():
     revisar_pendientes(cursor, conn)
 
     for t in TICKERS_LISTA:
+        time.sleep(0.5)
         try:
             accion = yf.Ticker(t)
 
@@ -161,7 +166,7 @@ def captura_diaria():
         except Exception as e:
             msg = f"Error con Ticker {t}: {e}"
             logging.error(msg)
-            enviar_alerta_telegram("Desde checkeador del IBEX:\n" + msg)
+            notificador.enviar_alerta("Desde checkeador del IBEX:\n" + msg)
             conn.rollback() # Deshacer cambios en DB si hay error
             continue
 
