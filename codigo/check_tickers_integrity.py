@@ -1,15 +1,17 @@
-import yfinance as yf
+import config_privado
 import os
+import requests
 import time
+import yfinance as yf
 
 from datetime import datetime
-from config import EMPRESAS_IBEX, RUTA_STATUS
+from config import EMPRESAS_IBEX
 
 def inicializar_log():
     """Borra el contenido del log anterior antes de empezar la sesión"""
     try:
         # Al abrir con 'w', el contenido anterior desaparece inmediatamente
-        with open(RUTA_STATUS, 'w', encoding='utf-8') as f:
+        with open(config_privado.RUTA_STATUS, 'w', encoding='utf-8') as f:
             f.write(f"--- NUEVA EJECUCIÓN: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
     except Exception as e:
         print(f"No se pudo resetear el log: {e}")
@@ -19,18 +21,33 @@ def escribir_log(mensaje, nivel="INFO"):
     linea = f"{timestamp} - {nivel} - {mensaje}\n"
     try:
         # Aseguramos que la carpeta existe, si no, la creamos
-        os.makedirs(os.path.dirname(RUTA_STATUS), exist_ok=True)
-        with open(RUTA_STATUS, 'a', encoding='utf-8') as f:
+        os.makedirs(os.path.dirname(config_privado.RUTA_STATUS), exist_ok=True)
+        with open(config_privado.RUTA_STATUS, 'a', encoding='utf-8') as f:
             f.write(linea)
             f.flush()
             os.fsync(f.fileno())
     except Exception as e:
         print(f"Error escribiendo en el log: {e}")
 
+def enviar_alerta_telegram(mensaje):
+    url = f"https://api.telegram.org/bot{config_privado.TOKEN_ID}/sendMessage"
+
+    payload = {
+        'chat_id': config_privado.CHAT_ID,
+        'text': f"ALERTA IBEX:\n{mensaje}",
+        'parse_mode': 'Markdown'
+    }
+
+    try:
+        requests.post(url, data=payload, timeout=10)
+    except Exception as e:
+        print(f"Error mandando mensaje: {e}")
+    return
+
 def verificar_integridad_mercado():
     inicializar_log()
     print(f"Iniciando verificación de {len(EMPRESAS_IBEX)} tickers...")
-    print(f"Escribiendo log en: {RUTA_STATUS}")
+    print(f"Escribiendo log en: {config_privado.RUTA_STATUS}")
     escribir_log("--- INICIO DE VERIFICACIÓN DIARIA ---")
     
     errores_detectados = 0
@@ -75,14 +92,16 @@ def verificar_integridad_mercado():
             errores_detectados += 1
 
     # Resumen final
-    if errores_detectados == 0:
-        resumen = f"TODO OK: Tickers operativos. ({discrepancias_nombre} discrepancias de nombre)"
+    if errores_detectados > 0 or discrepancias_nombre > 0:
+        resumen = f"Se han detectado {errores_detectados} errores y {discrepancias_nombre} discrepancias en el IBEX."
+        # Si quieres detalles específicos
+        enviar_alerta_telegram(resumen + "\nRevisa el log en la Raspberry para más detalles.")
+        escribir_log("Alerta enviada a Telegram.")
     else:
-        resumen = f"ALERTA: {errores_detectados} errores detectados en la lista."
+        escribir_log("Todo correcto. Sin alertas.")
     
-    escribir_log(resumen)
     escribir_log("--- FIN DE VERIFICACIÓN ---")
-    print(resumen)
 
 if __name__ == "__main__":
     verificar_integridad_mercado()
+    # enviar_alerta_telegram("HABEMUS BOT")

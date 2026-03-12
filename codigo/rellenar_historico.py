@@ -1,7 +1,8 @@
 import yfinance as yf
 
 from manejador_datos import manejador_csv
-from config import RUTA_CSV_MAESTRO, TICKERS_LISTA
+from config import TICKERS_LISTA
+from config_privado import *
 
 def poblar_historico(ticker = 'ITX.MC'):
     print(f"Descargando datos para {ticker}")

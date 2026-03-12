@@ -6,7 +6,9 @@ import yfinance as yf
 
 from datetime import datetime
 from manejador_datos import manejador_csv, revisar_pendientes
-from config import RUTA_CSV_MAESTRO, RUTA_ULTIMA_SESION, TICKERS_LISTA, RUTA_LOG, DB_CONFIG
+from check_tickers_integrity import enviar_alerta_telegram
+from config import TICKERS_LISTA
+from config_privado import *
 
 logging.basicConfig(
     filename=RUTA_LOG,
@@ -36,7 +38,9 @@ def capturar_cierre():
         _ = accion.info.get('longName', 'Inditex')
         print(f"Conexión exitosa")
     except Exception as e:
-        print(f"Error al conectar: {e}")
+        msg = f"Error al conectar: {e}"
+        enviar_alerta_telegram(msg)
+        print(msg)
     
     hist = accion.history(period="1d")
 
@@ -117,7 +121,7 @@ def captura_diaria():
 
             # --- NUEVA SECCIÓN: GUARDADO EN MARIA DB ---
             sql_db = """
-                INSERT INTO historico_ibex 
+                INSERT INTO """ + TABLA_HISTORICO + """ 
                 (fecha, ticker, precio_apertura, precio_cierre, rent_sesion, rent_diaria, confirmado)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE 
@@ -152,12 +156,12 @@ def captura_diaria():
 
             # Ruta de guardado de los datos
             manejador_csv(nuevo_dato, RUTA_CSV_MAESTRO, max_registros=20)
-
-
             logging.info(f"Ticker {t} introducido correctamente.")
 
         except Exception as e:
-            logging.error(f"Error con Ticker {t}: {e}")
+            msg = f"Error con Ticker {t}: {e}"
+            logging.error(msg)
+            enviar_alerta_telegram("Desde checkeador del IBEX:\n" + msg)
             conn.rollback() # Deshacer cambios en DB si hay error
             continue
 

@@ -3,7 +3,8 @@ import pandas as pd
 import time
 import yfinance as yf
 
-from config import DB_CONFIG, EMPRESAS_IBEX, RUTA_PRUEBA
+from config import EMPRESAS_IBEX
+from config_privado import *
 from datetime import datetime
 
 def cargar_empresas_info():

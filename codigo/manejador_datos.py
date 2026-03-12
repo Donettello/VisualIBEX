@@ -5,7 +5,8 @@ import pandas as pd
 import time
 import yfinance as yf
 
-from config import DB_CONFIG
+from check_tickers_integrity import enviar_alerta_telegram
+from config_privado import *
 from datetime import datetime, timedelta
 
 def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
@@ -45,7 +46,7 @@ def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
 
 def revisar_pendientes(cursor, conn):
     # Construimos la query para obtener los que quedan pendientes de confirmación
-    query = "SELECT fecha, ticker, precio_apertura FROM historico_ibex WHERE confirmado=0;"
+    query = f"SELECT fecha, ticker, precio_apertura FROM {TABLA_HISTORICO} WHERE confirmado=0;"
     cursor.execute(query)
     pendientes = cursor.fetchall()
 
@@ -75,7 +76,7 @@ def revisar_pendientes(cursor, conn):
                 # Obtenemos el cierre de la sesión anterior de MariaDB
                 # Buscamos la fecha máxima que sea menor a la fecha que estamos manejando
                 sql_ayer = '''
-                    SELECT precio_cierre FROM historico_ibex
+                    SELECT precio_cierre FROM ''' + TABLA_HISTORICO + '''
                     WHERE ticker = %s AND fecha < %s
                     ORDER BY fecha DESC LIMIT 1;
                 '''
@@ -91,7 +92,7 @@ def revisar_pendientes(cursor, conn):
 
                     # Actualización valores definitivos
                     update_query = '''
-                        UPDATE historico_ibex
+                        UPDATE ''' + TABLA_HISTORICO + '''
                         SET precio_cierre = %s,
                             rent_sesion = %s,
                             rent_diaria = %s,
@@ -107,12 +108,15 @@ def revisar_pendientes(cursor, conn):
                     logging.info(f"{ticker} [{fecha}] actualizado a precio oficial")
                     print(f"{ticker} [{fecha}] actualizado a precio oficial")
                 else:
-                    logging.warning(f"No hay sesión previa para {ticker} el {fecha}")
-
-                
+                    msg = f"No hay sesión previa para {ticker} el {fecha}"
+                    logging.warning("Desde manejador de datos:\n" + msg)
+                    enviar_alerta_telegram(msg)
+                    
 
         except Exception as e:
-            logging.error(f"No se pudo confirmar ticker {ticker}: {e}")
+            msg = f"No se pudo confirmar ticker {ticker}: {e}"
+            logging.error(msg)
+            enviar_alerta_telegram("Desde manejador de datos:\n" + msg)
         finally:
             time.sleep(0.5)
         

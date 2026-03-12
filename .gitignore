@@ -1,3 +1,14 @@
-*.txt
-*.csv
+# Archivos de configuración con contraseñas
+.env
+
+# Entornos virtuales
+ibex_env/
+__pycache__/
+*.pyc
+
+# Logs personales
 *.log
+
+# Archivos históricos y de control
+*.csv
+*.txt
