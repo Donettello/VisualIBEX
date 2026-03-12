@@ -6,16 +6,18 @@ import yfinance as yf
 
 from database_manager import DatabaseManager
 from datetime import datetime
+from dotenv import load_dotenv
 from manejador_datos import manejador_csv, revisar_pendientes
 from config import TICKERS_LISTA
 from config_privado import *
 from notifier import Notifier
 
+load_dotenv()
 db_manager = DatabaseManager
 notificador = Notifier()
 
 logging.basicConfig(
-    filename=RUTA_LOG,
+    filename=os.getenv('RUTA_LOG'),
     filemode='w', # Para controlar mejor  lo que ocurre cada día
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -55,10 +57,10 @@ def capturar_cierre():
         # Obtener la fecha del sistema
         fecha_sistema = datetime.now().strftime('%Y-%m-%d')
 
-        ruta_txt = "/home/donettello/Documents/VisualIBEX/ultima_sesion.txt"
+        ruta_ultima_sesion = os.getenv('RUTA_ULTIMA_SESION')
 
-        if os.path.exists(ruta_txt):
-            with open(ruta_txt, 'r') as f:
+        if os.path.exists(ruta_ultima_sesion):
+            with open(ruta_ultima_sesion, 'r') as f:
                 fecha_ultima_registrada = f.read().strip() # .strip() quita espacios o saltos de línea invisibles
         else:
             fecha_ultima_registrada = "" # Si el archivo no existe, lo tratamos como vacío
@@ -68,7 +70,7 @@ def capturar_cierre():
             captura_diaria()
             
             # Actualizar fichero de control
-            with open(RUTA_ULTIMA_SESION, 'w') as f:
+            with open(ruta_ultima_sesion, 'w') as f:
                 f.write(fecha_sistema)
                         
             print(f"Ficheros actualizados")
@@ -160,7 +162,8 @@ def captura_diaria():
             }
 
             # Ruta de guardado de los datos
-            manejador_csv(nuevo_dato, RUTA_CSV_MAESTRO, max_registros=20)
+            # manejador_csv(nuevo_dato, RUTA_CSV_MAESTRO, max_registros=20)
+            manejador_csv(nuevo_dato, os.getenv('RUTA_CSV_MAESTRO'), max_registros=20)
             logging.info(f"Ticker {t} introducido correctamente.")
 
         except Exception as e:

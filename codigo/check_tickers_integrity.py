@@ -19,7 +19,7 @@ def inicializar_log():
     """Borra el contenido del log anterior antes de empezar la sesión"""
     try:
         # Al abrir con 'w', el contenido anterior desaparece inmediatamente
-        with open(config_privado.RUTA_STATUS, 'w', encoding='utf-8') as f:
+        with open(RUTA_LOG, 'w', encoding='utf-8') as f:
             f.write(f"--- NUEVA EJECUCIÓN: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---\n")
     except Exception as e:
         print(f"No se pudo resetear el log: {e}")
@@ -29,8 +29,8 @@ def escribir_log(mensaje, nivel="INFO"):
     linea = f"{timestamp} - {nivel} - {mensaje}\n"
     try:
         # Aseguramos que la carpeta existe, si no, la creamos
-        os.makedirs(os.path.dirname(config_privado.RUTA_STATUS), exist_ok=True)
-        with open(config_privado.RUTA_STATUS, 'a', encoding='utf-8') as f:
+        os.makedirs(os.path.dirname(RUTA_LOG), exist_ok=True)
+        with open(RUTA_LOG, 'a', encoding='utf-8') as f:
             f.write(linea)
             f.flush()
             os.fsync(f.fileno())
@@ -40,7 +40,7 @@ def escribir_log(mensaje, nivel="INFO"):
 def verificar_integridad_mercado():
     inicializar_log()
     print(f"Iniciando verificación de {len(EMPRESAS_IBEX)} tickers...")
-    print(f"Escribiendo log en: {config_privado.RUTA_STATUS}")
+    print(f"Escribiendo log en: {RUTA_LOG}")
     escribir_log("--- INICIO DE VERIFICACIÓN DIARIA ---")
     
     errores_detectados = 0
