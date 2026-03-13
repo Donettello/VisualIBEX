@@ -13,7 +13,7 @@ from config_privado import *
 from notifier import Notifier
 
 load_dotenv()
-db_manager = DatabaseManager
+db_manager = DatabaseManager()
 notificador = Notifier()
 
 logging.basicConfig(

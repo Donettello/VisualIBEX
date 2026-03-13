@@ -1,3 +1,4 @@
+
 # Configuración para conectarse a la base de datos
 DB_CONFIG = {
     'host': 'localhost',

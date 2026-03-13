@@ -5,9 +5,11 @@ import pandas as pd
 import time
 import yfinance as yf
 
-from check_tickers_integrity import enviar_alerta_telegram
 from config_privado import *
 from datetime import datetime, timedelta
+from notifier import Notifier
+
+notificador = Notifier()
 
 def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
     """
@@ -110,13 +112,13 @@ def revisar_pendientes(cursor, conn):
                 else:
                     msg = f"No hay sesión previa para {ticker} el {fecha}"
                     logging.warning("Desde manejador de datos:\n" + msg)
-                    enviar_alerta_telegram(msg)
+                    notificador.enviar_alerta(msg)
                     
 
         except Exception as e:
             msg = f"No se pudo confirmar ticker {ticker}: {e}"
             logging.error(msg)
-            enviar_alerta_telegram("Desde manejador de datos:\n" + msg)
+            notificador.enviar_alerta("Desde manejador de datos:\n" + msg, "ERROR")
         finally:
             time.sleep(0.5)
         

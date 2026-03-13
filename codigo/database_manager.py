@@ -19,23 +19,17 @@ class DatabaseManager:
     def _conectar(self):
         return mysql.connector.connect(**self.config)
 
-    def insertar_registro_diario(self, fecha, ticker, apertura, cierre, rent_diaria, rent_intra, confirmado=0):
-        """Abstracción del INSERT"""
+    def guardar_precio_diario(self, datos_dict):
+        """Recibe un diccionario con los datos y los inserta/actualiza"""
         conn = self._conectar()
         cursor = conn.cursor()
-        
-        # Usamos f-string solo para el nombre de la tabla (que es seguro), 
-        # pero %s para los valores (para evitar SQL Injection)
         sql = f"""
             INSERT INTO {self.tabla_hist} 
-            (fecha, ticker, precio_inicio, precio_final, rent_web, rent_intra, confirmado)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE precio_final=%s, rent_web=%s, rent_intra=%s
+            (fecha, ticker, precio_apertura, precio_cierre, rent_sesion, rent_diaria, confirmado)
+            VALUES (%(fecha)s, %(ticker)s, %(p_ini)s, %(p_fin)s, %(r_web)s, %(r_intra)s, %(conf)s)
+            ON DUPLICATE KEY UPDATE precio_final=%(p_fin)s, rent_web=%(r_web)s, rent_intra=%(r_intra)s
         """
-        valores = (fecha, ticker, apertura, cierre, rent_diaria, rent_intra, confirmado, 
-                   cierre, rent_diaria, rent_intra)
-        
-        cursor.execute(sql, valores)
+        cursor.execute(sql, datos_dict)
         conn.commit()
         cursor.close()
         conn.close()
@@ -44,12 +38,21 @@ class DatabaseManager:
         """Abstracción del SELECT"""
         conn = self._conectar()
         cursor = conn.cursor()
-        sql = f"SELECT precio_final FROM {self.tabla_hist} WHERE ticker = %s ORDER BY fecha DESC LIMIT 1"
+        sql = f"SELECT precio_cierre FROM {self.tabla_hist} WHERE ticker = %s ORDER BY fecha DESC LIMIT 1"
         cursor.execute(sql, (ticker,))
         resultado = cursor.fetchone()
         cursor.close()
         conn.close()
         return resultado[0] if resultado else None
+    
+    def actualizar_cierre(self, datos_actual):
+        conn = self._conectar()
+        cursor = conn.cursor()
+        sql = f"UPDATE {self.tabla_hist} SET precio_cierre=%s, rent_sesion=%s, rent_diaria=%s, confirmado=1 WHERE fecha=%s AND ticker=%s"
+        cursor.execute(sql, datos_actual)
+        conn.commit()
+        cursor.close()
+        conn.close()
     
     # --- MÉTODOS PARA EMPRESAS_INFO ---
     def obtener_diccionario_empresas(self):
