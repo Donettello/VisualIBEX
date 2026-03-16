@@ -50,10 +50,12 @@ class DatabaseManager:
         cursor = conn.cursor()
         sql = f"SELECT fecha, ticker, precio_apertura FROM {self.tabla_hist} WHERE confirmado=0;"
         cursor.execute(sql)
-        pendientes = cursor.fetchall()
+        pendientes_raw = cursor.fetchall()
         cursor.close()
         conn.close()
-        return pendientes
+        
+        # f[0] es fecha, f[1] es ticker, f[2] es precio_apertura
+        return [(f[0], f[1], float(f[2])) for f in pendientes_raw]
     
     def obtener_ultimo_cierre_confirmado(self, ticker, fecha):
         conn = self._conectar()
