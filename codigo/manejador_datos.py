@@ -5,7 +5,6 @@ import pandas as pd
 import time
 import yfinance as yf
 
-from config_privado import *
 from database_manager import DatabaseManager
 from datetime import datetime, timedelta
 from notifier import Notifier
