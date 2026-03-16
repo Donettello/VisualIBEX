@@ -6,9 +6,11 @@ import time
 import yfinance as yf
 
 from config_privado import *
+from database_manager import DatabaseManager
 from datetime import datetime, timedelta
 from notifier import Notifier
 
+db_manager = DatabaseManager()
 notificador = Notifier()
 
 def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
@@ -46,11 +48,9 @@ def manejador_csv(nueva_fila, ruta_csv, max_registros=20):
     logging.info(f"Registro guardado. Total en archivo: {len(df)} lineas.")
     return
 
-def revisar_pendientes(cursor, conn):
+def revisar_pendientes():
     # Construimos la query para obtener los que quedan pendientes de confirmación
-    query = f"SELECT fecha, ticker, precio_apertura FROM {TABLA_HISTORICO} WHERE confirmado=0;"
-    cursor.execute(query)
-    pendientes = cursor.fetchall()
+    pendientes = db_manager.obtener_pendientes()
 
     if not pendientes:
         # No hay valores pendientes
@@ -75,15 +75,8 @@ def revisar_pendientes(cursor, conn):
                 # 1. El nuevo precio oficial
                 p_cierre_oficial = float(df_confirmar['Close'].iloc[0])
 
-                # Obtenemos el cierre de la sesión anterior de MariaDB
-                # Buscamos la fecha máxima que sea menor a la fecha que estamos manejando
-                sql_ayer = '''
-                    SELECT precio_cierre FROM ''' + TABLA_HISTORICO + '''
-                    WHERE ticker = %s AND fecha < %s
-                    ORDER BY fecha DESC LIMIT 1;
-                '''
-                cursor.execute(sql_ayer, (ticker, fecha))
-                res_ayer = cursor.fetchone()
+                res_ayer = db_manager.obtener_ultimo_cierre_confirmado(ticker, fecha)
+                # res_ayer = cursor.fetchone()
 
                 if res_ayer:
                     p_cierre_anterior = float(res_ayer[0])
@@ -92,23 +85,24 @@ def revisar_pendientes(cursor, conn):
                     nueva_rent_sesion = ((p_cierre_oficial - p_apertura) / p_apertura) * 100
                     nueva_rent_diaria = ((p_cierre_oficial - p_cierre_anterior) / p_cierre_anterior) * 100
 
-                    # Actualización valores definitivos
-                    update_query = '''
-                        UPDATE ''' + TABLA_HISTORICO + '''
-                        SET precio_cierre = %s,
-                            rent_sesion = %s,
-                            rent_diaria = %s,
-                            confirmado = 1
-                        WHERE fecha=%s AND ticker=%s;
-                    '''
-                    cursor.execute(update_query,
-                                  (round(p_cierre_oficial,4),
-                                   round(nueva_rent_sesion, 4),
-                                   round(nueva_rent_diaria, 4),
-                                   fecha, ticker))
+                    valores = {
+                        'p_fin': p_cierre_oficial,      # Corresponde a %(p_fin)s
+                        'r_ses': nueva_rent_sesion,     # Corresponde a %(r_ses)s (rent_sesion)
+                        'r_dia': nueva_rent_diaria,     # Corresponde a %(r_dia)s (rent_diaria)
+                        'fecha': fecha,                 # Corresponde a %(fecha)s
+                        'ticker': ticker                # Corresponde a %(ticker)s
+                    }
                     
-                    logging.info(f"{ticker} [{fecha}] actualizado a precio oficial")
-                    print(f"{ticker} [{fecha}] actualizado a precio oficial")
+                    try:
+                        db_manager.actualizar_cierre(valores)
+                        
+                        logging.info(f"{ticker} [{fecha}] actualizado a precio oficial")
+                        print(f"{ticker} [{fecha}] actualizado a precio oficial")
+                    except Exception as e:
+                        msg = f"Error al actualizar {ticker}: {e}"
+                        logging.error(msg)
+                        notificador.enviar_alerta(msg, "ERROR")
+                        continue
                 else:
                     msg = f"No hay sesión previa para {ticker} el {fecha}"
                     logging.warning("Desde manejador de datos:\n" + msg)
@@ -121,10 +115,12 @@ def revisar_pendientes(cursor, conn):
             notificador.enviar_alerta("Desde manejador de datos:\n" + msg, "ERROR")
         finally:
             time.sleep(0.5)
+    
+    return
         
-    conn.commit()
 
 if __name__ == "__main__":
+    '''
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor()
@@ -132,4 +128,5 @@ if __name__ == "__main__":
         cursor.close()
         conn.close()
     except Exception as e:
-        print("Error en la conexión de la base de datos")
+        print("Error en la conexión de la base de datos")'''
+    pass

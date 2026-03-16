@@ -9,7 +9,6 @@ from datetime import datetime
 from dotenv import load_dotenv
 from manejador_datos import manejador_csv, revisar_pendientes
 from config import TICKERS_LISTA
-from config_privado import *
 from notifier import Notifier
 
 load_dotenv()
@@ -77,22 +76,19 @@ def capturar_cierre():
         else:
             print("Hoy no toca")
             logging.info("Hoy no ha habido sesión")
-    
+'''    
 def obtener_ultimo_cierre_db(cursor, ticker):
-    '''Obtiene el último precio_cierre registrado en la BD del ticker'''
+    ''Obtiene el último precio_cierre registrado en la BD del ticker''
     query = "SELECT precio_cierre FROM historico_ibex WHERE ticker=%s ORDER BY fecha DESC LIMIT 1;"
     cursor.execute(query, (ticker, ))
     resultado = cursor.fetchone()
     return float(resultado[0]) if resultado else None
-
+'''
 def captura_diaria():
-    conn = mysql.connector.connect(**DB_CONFIG)
-    cursor = conn.cursor()
-
     fecha_hoy = datetime.now().strftime('%Y-%m-%d')
 
     # Revisamos que no hay precios de cierre pendientes
-    revisar_pendientes(cursor, conn)
+    revisar_pendientes()
 
     for t in TICKERS_LISTA:
         time.sleep(0.5)
@@ -115,7 +111,7 @@ def captura_diaria():
                 confirmado = 0
 
             # Obtenemos nuestro precio de ayer de la base de datos
-            p_cierre_ayer = obtener_ultimo_cierre_db(cursor, t)
+            p_cierre_ayer = db_manager.obtener_ultimo_cierre(t)
 
             if p_cierre_ayer is None:
                 # Ha fallado la base de datos
@@ -127,28 +123,18 @@ def captura_diaria():
             rent_diaria = ((p_cierre_hoy - p_cierre_ayer) / p_cierre_ayer) * 100
 
             # --- NUEVA SECCIÓN: GUARDADO EN MARIA DB ---
-            sql_db = """
-                INSERT INTO """ + TABLA_HISTORICO + """ 
-                (fecha, ticker, precio_apertura, precio_cierre, rent_sesion, rent_diaria, confirmado)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE 
-                    precio_cierre = VALUES(precio_cierre),
-                    rent_sesion = VALUES(rent_sesion),
-                    rent_diaria = VALUES(rent_diaria),
-                    confirmado = VALUES(confirmado)
-            """
-            valores_db = (
-                fecha_hoy,
-                t,
-                round(float(p_apertura), 4),
-                round(float(p_cierre_hoy), 4),
-                round(float(rent_sesion), 4),
-                round(float(rent_diaria), 4),
-                confirmado
-            )
-            
-            cursor.execute(sql_db, valores_db)
-            conn.commit() # Guardamos en cada iteración para mayor seguridad
+            # Hacemos un diccionario para insertarlo en la base de datos
+            valores_db = {
+                'fecha': fecha_hoy,
+                'ticker': t,
+                'p_ape': round(float(p_apertura), 4),
+                'p_cie': round(float(p_cierre_hoy), 4),
+                'r_ses': round(float(rent_sesion), 4),
+                'r_dia': round(float(rent_diaria), 4),
+                'conf': confirmado
+            }
+
+            db_manager.guardar_precio_diario(valores_db)
 
             # Preparamos el dato
             nuevo_dato = {
@@ -170,11 +156,8 @@ def captura_diaria():
             msg = f"Error con Ticker {t}: {e}"
             logging.error(msg)
             notificador.enviar_alerta("Desde checkeador del IBEX:\n" + msg)
-            conn.rollback() # Deshacer cambios en DB si hay error
             continue
 
-    cursor.close()
-    conn.close()
     return
 
 if __name__ == "__main__":

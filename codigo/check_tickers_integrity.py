@@ -1,4 +1,3 @@
-import config_privado
 import os
 import time
 import yfinance as yf
