@@ -68,27 +68,16 @@ def capturar_cierre():
             # Hoy toca trabajar
             captura_diaria()
             
-            # Actualizar fichero de control
-            with open(ruta_ultima_sesion, 'w') as f:
-                f.write(fecha_sistema)
-                        
-            print(f"Ficheros actualizados")
         else:
             print("Hoy no toca")
             logging.info("Hoy no ha habido sesión")
-'''    
-def obtener_ultimo_cierre_db(cursor, ticker):
-    ''Obtiene el último precio_cierre registrado en la BD del ticker''
-    query = "SELECT precio_cierre FROM historico_ibex WHERE ticker=%s ORDER BY fecha DESC LIMIT 1;"
-    cursor.execute(query, (ticker, ))
-    resultado = cursor.fetchone()
-    return float(resultado[0]) if resultado else None
-'''
+
 def captura_diaria():
     fecha_hoy = datetime.now().strftime('%Y-%m-%d')
 
     # Revisamos que no hay precios de cierre pendientes
     revisar_pendientes()
+    sw_error = False
 
     for t in TICKERS_LISTA:
         time.sleep(0.5)
@@ -156,8 +145,15 @@ def captura_diaria():
             msg = f"Error con Ticker {t}: {e}"
             logging.error(msg)
             notificador.enviar_alerta("Desde checkeador del IBEX:\n" + msg)
+            sw_error = True
             continue
-
+        
+    if not sw_error:
+        # Actualizar fichero de control
+        with open(os.getenv('RUTA_ULTIMA_SESION'), 'w') as f:
+            f.write(datetime.now().strftime('%Y-%m-%d'))
+                    
+        print(f"Ficheros actualizados")
     return
 
 if __name__ == "__main__":
