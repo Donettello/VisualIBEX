@@ -1,4 +1,4 @@
-# Proyecto VisualIBEX
-Un pequeño proyecto con el que poder obtener datos del IBEX35 para poder hacer una visualización de la evolución de las cotizaciones.
+# 📈 VisualIbex: Real-Time Data Pipeline & BI Dashboard
+Este proyecto implementa una solución End-to-End de Business Intelligence para el seguimiento del IBEX 35, automatizando todo el flujo desde la extracción de datos hasta la visualización avanzada.
 
-Con este proyecto pretendo crear una herramienta de visualización destinada al usuario noo profesional, como lo soy en el momento de la creación de este proyecto.
+## 🛠️ Arquitectura Técnica
