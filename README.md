@@ -16,4 +16,4 @@ Este proyecto implementa una solución End-to-End de Business Intelligence para 
 
 ## 📁 Estructura del Repositorio
 * `/codigo`: Código Python de extracción de información y carga de datos a MariaDB.
-* `/pbix`: Ubicación archivo .pbix para su revisión técnica. (En breve)
+* `/pbix`: Ubicación archivo `.pbix` para su revisión técnica. Puede verse un breve resumen en [este enlace](https://www.google.com). (En breve)
