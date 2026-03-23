@@ -15,4 +15,5 @@ Este proyecto implementa una solución End-to-End de Business Intelligence para 
 * **Filtros Interactivos**: Segmentación por sector, empresa y rangos de fechas.
 
 ## 📁 Estructura del Repositorio
-* '/codigo': Código Python de extracción de información y carga de datos a MariaDB.
+* `/codigo`: Código Python de extracción de información y carga de datos a MariaDB.
+* `/pbix`: Ubicación archivo .pbix para su revisión técnica. (En breve)
